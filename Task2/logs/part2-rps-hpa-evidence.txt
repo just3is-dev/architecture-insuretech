@@ -1,0 +1,60 @@
+=== kubectl get hpa,deploy,pods (после RPS-нагрузочного теста) ===
+NAME                                                   REFERENCE                 TARGETS    MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/scaletestapp-hpa   Deployment/scaletestapp   7954m/10   1         10        5          71m
+
+NAME                                 READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS           IMAGES                                                          SELECTOR
+deployment.apps/prometheus           1/1     1            1           25m   prometheus           prom/prometheus:v2.55.1                                         app=prometheus
+deployment.apps/prometheus-adapter   1/1     1            1           10m   prometheus-adapter   registry.k8s.io/prometheus-adapter/prometheus-adapter:v0.12.0   app.kubernetes.io/instance=prometheus-adapter,app.kubernetes.io/name=prometheus-adapter
+deployment.apps/scaletestapp         5/5     5            5           71m   scaletestapp         ghcr.io/yandex-practicum/scaletestapp:latest                    app=scaletestapp
+
+NAME                                      READY   STATUS    RESTARTS   AGE     IP            NODE       NOMINATED NODE   READINESS GATES
+pod/prometheus-769c7c9466-d48qk           1/1     Running   0          12m     10.244.0.14   minikube   <none>           <none>
+pod/prometheus-adapter-75655d9d69-699fc   1/1     Running   0          10m     10.244.0.15   minikube   <none>           <none>
+pod/scaletestapp-8dcc77c6d-2ljhs          1/1     Running   0          6m39s   10.244.0.18   minikube   <none>           <none>
+pod/scaletestapp-8dcc77c6d-4fr8q          1/1     Running   0          7m24s   10.244.0.16   minikube   <none>           <none>
+pod/scaletestapp-8dcc77c6d-cnn2p          1/1     Running   0          13m     10.244.0.11   minikube   <none>           <none>
+pod/scaletestapp-8dcc77c6d-ppnbf          1/1     Running   0          7m9s    10.244.0.17   minikube   <none>           <none>
+pod/scaletestapp-8dcc77c6d-w69b5          1/1     Running   0          12m     10.244.0.13   minikube   <none>           <none>
+
+=== kubectl describe hpa scaletestapp-hpa ===
+Name:                                  scaletestapp-hpa
+Namespace:                             default
+Labels:                                <none>
+Annotations:                           <none>
+CreationTimestamp:                     Tue, 28 Jul 2026 17:48:35 +0200
+Reference:                             Deployment/scaletestapp
+Metrics:                               ( current / target )
+  "http_requests_per_second" on pods:  7954m / 10
+Min replicas:                          1
+Max replicas:                          10
+Deployment pods:                       5 current / 5 desired
+Conditions:
+  Type            Status  Reason               Message
+  ----            ------  ------               -------
+  AbleToScale     True    ScaleDownStabilized  recent recommendations were higher than current one, applying the highest recent recommendation
+  ScalingActive   True    ValidMetricFound     the HPA was able to successfully calculate a replica count from pods metric http_requests_per_second
+  ScalingLimited  False   DesiredWithinRange   the desired count is within the acceptable range
+Events:
+  Type     Reason                        Age                 From                       Message
+  ----     ------                        ----                ----                       -------
+  Normal   SuccessfulRescale             44m                 horizontal-pod-autoscaler  New size: 2; reason: memory resource utilization (percentage of request) above target
+  Warning  FailedGetResourceMetric       13m (x50 over 58m)  horizontal-pod-autoscaler  failed to get memory utilization: unable to get metrics for resource memory: no metrics returned from resource metrics API
+  Warning  FailedComputeMetricsReplicas  13m (x50 over 58m)  horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get memory resource metric value: failed to get memory utilization: unable to get metrics for resource memory: no metrics returned from resource metrics API
+  Normal   SuccessfulRescale             12m                 horizontal-pod-autoscaler  New size: 2; reason:
+  Normal   SuccessfulRescale             7m24s               horizontal-pod-autoscaler  New size: 3; reason: pods metric http_requests_per_second above target
+  Normal   SuccessfulRescale             7m9s                horizontal-pod-autoscaler  New size: 4; reason: pods metric http_requests_per_second above target
+  Normal   SuccessfulRescale             6m39s               horizontal-pod-autoscaler  New size: 5; reason: pods metric http_requests_per_second above target
+
+=== События масштабирования Deployment ===
+LAST SEEN   TYPE     REASON              OBJECT                    MESSAGE
+44m         Normal   ScalingReplicaSet   deployment/scaletestapp   Scaled up replica set scaletestapp-5c56b886f8 from 1 to 2
+13m         Normal   ScalingReplicaSet   deployment/scaletestapp   Scaled down replica set scaletestapp-5c56b886f8 from 2 to 1
+13m         Normal   ScalingReplicaSet   deployment/scaletestapp   Scaled up replica set scaletestapp-8dcc77c6d from 0 to 1
+13m         Normal   ScalingReplicaSet   deployment/scaletestapp   Scaled down replica set scaletestapp-5c56b886f8 from 1 to 0
+12m         Normal   ScalingReplicaSet   deployment/scaletestapp   Scaled up replica set scaletestapp-8dcc77c6d from 1 to 2
+7m24s       Normal   ScalingReplicaSet   deployment/scaletestapp   Scaled up replica set scaletestapp-8dcc77c6d from 2 to 3
+7m9s        Normal   ScalingReplicaSet   deployment/scaletestapp   Scaled up replica set scaletestapp-8dcc77c6d from 3 to 4
+6m39s       Normal   ScalingReplicaSet   deployment/scaletestapp   Scaled up replica set scaletestapp-8dcc77c6d from 4 to 5
+
+=== Custom Metrics API (http_requests_per_second по подам) ===
+{"kind":"MetricValueList","apiVersion":"custom.metrics.k8s.io/v1beta1","metadata":{},"items":[{"describedObject":{"kind":"Pod","namespace":"default","name":"scaletestapp-8dcc77c6d-2ljhs","apiVersion":"/v1"},"metricName":"http_requests_per_second","timestamp":"2026-07-28T17:00:12Z","value":"0","selector":null},{"describedObject":{"kind":"Pod","namespace":"default","name":"scaletestapp-8dcc77c6d-4fr8q","apiVersion":"/v1"},"metricName":"http_requests_per_second","timestamp":"2026-07-28T17:00:12Z","value":"0","selector":null},{"describedObject":{"kind":"Pod","namespace":"default","name":"scaletestapp-8dcc77c6d-cnn2p","apiVersion":"/v1"},"metricName":"http_requests_per_second","timestamp":"2026-07-28T17:00:12Z","value":"19322m","selector":null},{"describedObject":{"kind":"Pod","namespace":"default","name":"scaletestapp-8dcc77c6d-ppnbf","apiVersion":"/v1"},"metricName":"http_requests_per_second","timestamp":"2026-07-28T17:00:12Z","value":"0","selector":null},{"describedObject":{"kind":"Pod","namespace":"default","name":"scaletestapp-8dcc77c6d-w69b5","apiVersion":"/v1"},"metricName":"http_requests_per_second","timestamp":"2026-07-28T17:00:12Z","value":"18122m","selector":null}]}

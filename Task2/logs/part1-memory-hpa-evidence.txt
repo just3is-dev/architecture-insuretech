@@ -1,0 +1,42 @@
+=== kubectl get hpa,deploy,pods (после нагрузочного теста) ===
+NAME                                                   REFERENCE                 TARGETS           MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/scaletestapp-hpa   Deployment/scaletestapp   memory: 59%/80%   1         10        2          30m
+
+NAME                           READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS     IMAGES                                         SELECTOR
+deployment.apps/scaletestapp   2/2     2            2           30m   scaletestapp   ghcr.io/yandex-practicum/scaletestapp:latest   app=scaletestapp
+
+NAME                                READY   STATUS    RESTARTS      AGE     IP           NODE       NOMINATED NODE   READINESS GATES
+pod/scaletestapp-5c56b886f8-rtzvr   1/1     Running   0             3m24s   10.244.0.7   minikube   <none>           <none>
+pod/scaletestapp-5c56b886f8-zksh6   1/1     Running   7 (11m ago)   30m     10.244.0.6   minikube   <none>           <none>
+
+=== kubectl describe hpa scaletestapp-hpa ===
+Name:                                                     scaletestapp-hpa
+Namespace:                                                default
+Labels:                                                   <none>
+Annotations:                                              <none>
+CreationTimestamp:                                        Tue, 28 Jul 2026 17:48:35 +0200
+Reference:                                                Deployment/scaletestapp
+Metrics:                                                  ( current / target )
+  resource memory on pods  (as a percentage of request):  59% (18126Ki) / 80%
+Min replicas:                                             1
+Max replicas:                                             10
+Deployment pods:                                          2 current / 2 desired
+Conditions:
+  Type            Status  Reason              Message
+  ----            ------  ------              -------
+  AbleToScale     True    ReadyForNewScale    recommended size matches current size
+  ScalingActive   True    ValidMetricFound    the HPA was able to successfully calculate a replica count from memory resource utilization (percentage of request)
+  ScalingLimited  False   DesiredWithinRange  the desired count is within the acceptable range
+Events:
+  Type     Reason                        Age                   From                       Message
+  ----     ------                        ----                  ----                       -------
+  Warning  FailedGetResourceMetric       30m                   horizontal-pod-autoscaler  failed to get memory utilization: unable to get metrics for resource memory: unable to fetch metrics from resource metrics API: the server is currently unable to handle the request (get pods.metrics.k8s.io)
+  Warning  FailedComputeMetricsReplicas  30m                   horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get memory resource metric value: failed to get memory utilization: unable to get metrics for resource memory: unable to fetch metrics from resource metrics API: the server is currently unable to handle the request (get pods.metrics.k8s.io)
+  Warning  FailedComputeMetricsReplicas  14m (x12 over 17m)    horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get memory resource metric value: failed to get memory utilization: unable to get metrics for resource memory: no metrics returned from resource metrics API
+  Warning  FailedGetResourceMetric       7m37s (x41 over 17m)  horizontal-pod-autoscaler  failed to get memory utilization: unable to get metrics for resource memory: no metrics returned from resource metrics API
+  Normal   SuccessfulRescale             3m36s                 horizontal-pod-autoscaler  New size: 2; reason: memory resource utilization (percentage of request) above target
+
+=== События масштабирования Deployment ===
+LAST SEEN   TYPE     REASON              OBJECT                    MESSAGE
+30m         Normal   ScalingReplicaSet   deployment/scaletestapp   Scaled up replica set scaletestapp-5c56b886f8 from 0 to 1
+3m24s       Normal   ScalingReplicaSet   deployment/scaletestapp   Scaled up replica set scaletestapp-5c56b886f8 from 1 to 2
